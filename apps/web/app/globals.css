@@ -23,6 +23,12 @@ body {
   text-decoration: none;
 }
 
+.user-link {
+  display: block;
+  min-width: 0;
+  width: 100%;
+}
+
 .page-shell {
   min-height: calc(100vh - 4rem);
   padding: 4rem 1.5rem;

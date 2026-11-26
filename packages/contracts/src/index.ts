@@ -54,7 +54,11 @@ export type MessageResponse = {
 };
 
 export type UsersResponse = {
-  users: User[];
+  users: UserListItem[];
+};
+
+export type UserListItem = User & {
+  influenceScore: number;
 };
 
 export type ErrorResponse = {

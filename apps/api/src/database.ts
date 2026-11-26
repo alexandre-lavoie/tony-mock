@@ -10,6 +10,7 @@ import { and, eq } from "drizzle-orm";
 
 type DatabaseUser = Omit<User, "createdAt"> & { createdAt: Date };
 type DatabaseFollow = Omit<Follow, "createdAt"> & { createdAt: Date };
+export type FollowEdge = Pick<Follow, "followerId" | "followingId">;
 
 export type DatabaseAdapter = {
   dialect: DatabaseDialect;
@@ -23,6 +24,7 @@ export type DatabaseAdapter = {
   findUserById: (id: number) => Promise<DatabaseUser | undefined>;
   findUserByUsername: (username: string) => Promise<DatabaseUser | undefined>;
   listFollowerIds: (followingId: number) => Promise<number[]>;
+  listFollowEdges: () => Promise<FollowEdge[]>;
   listFollowingIds: (followerId: number) => Promise<number[]>;
   listUsers: () => Promise<DatabaseUser[]>;
 };
@@ -112,6 +114,13 @@ async function createDatabaseAdapter(): Promise<DatabaseAdapter> {
 
         return rows.map(({ followerId }) => followerId);
       },
+      listFollowEdges: async () =>
+        db
+          .select({
+            followerId: follows.followerId,
+            followingId: follows.followingId,
+          })
+          .from(follows),
       listFollowingIds: async (followerId) => {
         const rows = await db
           .select({ followingId: follows.followingId })
@@ -195,6 +204,13 @@ async function createDatabaseAdapter(): Promise<DatabaseAdapter> {
 
       return rows.map(({ followerId }) => followerId);
     },
+    listFollowEdges: async () =>
+      db
+        .select({
+          followerId: follows.followerId,
+          followingId: follows.followingId,
+        })
+        .from(follows),
     listFollowingIds: async (followerId) => {
       const rows = await db
         .select({ followingId: follows.followingId })

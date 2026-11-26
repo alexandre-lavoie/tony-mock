@@ -16,6 +16,11 @@ async function getUsers() {
 
 export default async function UsersPage() {
   const users = await getUsers();
+  const sortedUsers = [...users].sort(
+    (left, right) =>
+      right.influenceScore - left.influenceScore ||
+      left.username.localeCompare(right.username),
+  );
 
   return (
     <main className="page-shell">
@@ -28,8 +33,8 @@ export default async function UsersPage() {
             </Text>
           </Flex>
 
-          {users.length ? (
-            <UsersGrid users={users} />
+          {sortedUsers.length ? (
+            <UsersGrid users={sortedUsers} />
           ) : (
             <Card size="3">
               <Text color="gray">No users have joined yet.</Text>

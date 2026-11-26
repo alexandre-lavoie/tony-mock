@@ -17,7 +17,8 @@ import cors from "cors";
 import express from "express";
 
 import { database } from "./database";
-import { calculateInfluenceScore } from "./influence";
+import { calculateInfluenceScore, calculateInfluenceScores } from "./influence";
+import { seedDatabaseIfEmpty } from "./seed";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3001);
@@ -174,8 +175,15 @@ app.post("/login", async (request, response) => {
 
 app.get("/api/users", async (_request, response) => {
   const users = await database.listUsers();
+  const influenceScores = calculateInfluenceScores(
+    users.map(({ id }) => id),
+    await database.listFollowEdges(),
+  );
   const body = {
-    users: users.map(serializeUser),
+    users: users.map((user) => ({
+      ...serializeUser(user),
+      influenceScore: influenceScores.get(user.id) ?? 0,
+    })),
   } satisfies UsersResponse;
 
   response.json(body);
@@ -385,6 +393,12 @@ app.delete(
     response.status(204).send();
   },
 );
+
+const seededUserCount = await seedDatabaseIfEmpty(database);
+
+if (seededUserCount > 0) {
+  console.log(`Seeded ${seededUserCount} demo users.`);
+}
 
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
