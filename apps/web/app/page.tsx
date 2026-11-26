@@ -1,8 +1,5 @@
 import { Badge, Card, Container, Flex, Heading, Text } from "@radix-ui/themes";
-
-type ApiMessage = {
-  message: string;
-};
+import type { MessageResponse } from "@influencial/contracts";
 
 async function getApiMessage(): Promise<string> {
   const apiUrl = process.env.API_URL ?? "http://localhost:3001";
@@ -16,7 +13,7 @@ async function getApiMessage(): Promise<string> {
       throw new Error(`API returned ${response.status}`);
     }
 
-    const data = (await response.json()) as ApiMessage;
+    const data = (await response.json()) as MessageResponse;
     return data.message;
   } catch {
     return "The API is currently unavailable.";
