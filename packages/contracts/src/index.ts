@@ -35,6 +35,10 @@ export type FollowResponse = {
   follow: Follow;
 };
 
+export type FollowingResponse = {
+  followingIds: number[];
+};
+
 export type HealthResponse = {
   status: "ok";
   database: DatabaseDialect;

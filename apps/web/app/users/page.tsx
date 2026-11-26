@@ -1,15 +1,7 @@
 import type { UsersResponse } from "@influencial/contracts";
-import {
-  Avatar,
-  Card,
-  Container,
-  Flex,
-  Grid,
-  Heading,
-  Text,
-} from "@radix-ui/themes";
-import Link from "next/link";
+import { Card, Container, Flex, Heading, Text } from "@radix-ui/themes";
 
+import { UsersGrid } from "../../components/users-grid";
 import { apiUrl } from "../../lib/api";
 
 async function getUsers() {
@@ -37,35 +29,7 @@ export default async function UsersPage() {
           </Flex>
 
           {users.length ? (
-            <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="4">
-              {users.map((user) => (
-                <Link
-                  className="user-link"
-                  href={`/users/${user.id}`}
-                  key={user.id}
-                >
-                  <Card className="user-card" size="3">
-                    <Flex align="center" gap="4">
-                      <Avatar
-                        size="4"
-                        radius="full"
-                        fallback={(user.displayName ?? user.username)
-                          .slice(0, 2)
-                          .toUpperCase()}
-                      />
-                      <Flex direction="column" gap="1">
-                        <Text size="3" weight="bold">
-                          {user.displayName ?? user.username}
-                        </Text>
-                        <Text size="2" color="gray">
-                          @{user.username}
-                        </Text>
-                      </Flex>
-                    </Flex>
-                  </Card>
-                </Link>
-              ))}
-            </Grid>
+            <UsersGrid users={users} />
           ) : (
             <Card size="3">
               <Text color="gray">No users have joined yet.</Text>

@@ -2,6 +2,7 @@ import type {
   CreateUserRequest,
   ErrorResponse,
   Follow,
+  FollowingResponse,
   FollowResponse,
   HealthResponse,
   LoginRequest,
@@ -274,6 +275,30 @@ app.post(
     response.status(201).json(body);
   },
 );
+
+app.get("/users/:followerId/following", async (request, response) => {
+  const followerId = parseId(request.params.followerId);
+
+  if (!followerId) {
+    const body = { error: "Invalid user ID." } satisfies ErrorResponse;
+
+    response.status(400).json(body);
+    return;
+  }
+
+  if (!(await database.findUserById(followerId))) {
+    const body = { error: "User not found." } satisfies ErrorResponse;
+
+    response.status(404).json(body);
+    return;
+  }
+
+  const body = {
+    followingIds: await database.listFollowingIds(followerId),
+  } satisfies FollowingResponse;
+
+  response.json(body);
+});
 
 app.delete(
   "/users/:followerId/follow/:followingId",

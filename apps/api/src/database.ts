@@ -22,6 +22,7 @@ export type DatabaseAdapter = {
   deleteUser: (id: number) => Promise<boolean>;
   findUserById: (id: number) => Promise<DatabaseUser | undefined>;
   findUserByUsername: (username: string) => Promise<DatabaseUser | undefined>;
+  listFollowingIds: (followerId: number) => Promise<number[]>;
   listUsers: () => Promise<DatabaseUser[]>;
 };
 
@@ -102,6 +103,14 @@ async function createDatabaseAdapter(): Promise<DatabaseAdapter> {
 
         return user;
       },
+      listFollowingIds: async (followerId) => {
+        const rows = await db
+          .select({ followingId: follows.followingId })
+          .from(follows)
+          .where(eq(follows.followerId, followerId));
+
+        return rows.map(({ followingId }) => followingId);
+      },
       listUsers: async () => db.select().from(users),
     };
   }
@@ -168,6 +177,14 @@ async function createDatabaseAdapter(): Promise<DatabaseAdapter> {
         .limit(1);
 
       return user;
+    },
+    listFollowingIds: async (followerId) => {
+      const rows = await db
+        .select({ followingId: follows.followingId })
+        .from(follows)
+        .where(eq(follows.followerId, followerId));
+
+      return rows.map(({ followingId }) => followingId);
     },
     listUsers: async () => db.select().from(users),
   };
