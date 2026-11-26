@@ -25,24 +25,23 @@ export type DatabaseAdapter = {
   listUsers: () => Promise<DatabaseUser[]>;
 };
 
-function getDatabaseDialect(): DatabaseDialect {
-  const databaseUrl = (
-    process.env.DATABASE_URL ?? "file:local.db"
-  ).toLowerCase();
+function getDatabaseDialect(databaseUrl: string): DatabaseDialect {
+  const normalizedUrl = databaseUrl.toLowerCase();
 
-  return databaseUrl.startsWith("postgres://") ||
-    databaseUrl.startsWith("postgresql://")
+  return normalizedUrl.startsWith("postgres://") ||
+    normalizedUrl.startsWith("postgresql://")
     ? "postgresql"
     : "sqlite";
 }
 
 async function createDatabaseAdapter(): Promise<DatabaseAdapter> {
-  const dialect = getDatabaseDialect();
+  const databaseUrl = process.env.DATABASE_URL ?? "file:local.db";
+  const dialect = getDatabaseDialect(databaseUrl);
 
   if (dialect === "postgresql") {
     const { createDatabase, follows, users } =
       await import("@influencial/db-postgres");
-    const db = createDatabase();
+    const db = createDatabase(databaseUrl);
 
     return {
       dialect,
@@ -109,7 +108,7 @@ async function createDatabaseAdapter(): Promise<DatabaseAdapter> {
 
   const { createDatabase, follows, users } =
     await import("@influencial/db-sqlite");
-  const db = createDatabase();
+  const db = createDatabase(databaseUrl);
 
   return {
     dialect,

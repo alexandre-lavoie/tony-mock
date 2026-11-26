@@ -4,12 +4,49 @@
 
 body {
   margin: 0;
+  background: var(--gray-2);
 }
 
-main {
+.site-header {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  padding: 0.875rem 1.5rem;
+  border-bottom: 1px solid var(--gray-5);
+  background: color-mix(in srgb, var(--color-background) 92%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.brand,
+.user-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-shell {
+  min-height: calc(100vh - 4rem);
+  padding: 4rem 1.5rem;
+}
+
+.centered-page {
   display: grid;
-  min-height: 100vh;
+  min-height: calc(100vh - 4rem);
   place-items: center;
-  padding: 2rem;
-  background: var(--gray-2);
+  padding: 2rem 1.5rem;
+}
+
+.user-card {
+  height: 100%;
+  transition:
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.user-card:hover {
+  border-color: var(--accent-7);
+  transform: translateY(-2px);
+}
+
+.auth-error {
+  margin-top: 1rem;
 }

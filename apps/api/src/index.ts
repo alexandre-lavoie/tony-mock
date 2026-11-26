@@ -153,6 +153,30 @@ app.get("/api/users", async (_request, response) => {
   response.json(body);
 });
 
+app.get("/api/users/:id", async (request, response) => {
+  const id = parseId(request.params.id);
+
+  if (!id) {
+    const body = { error: "Invalid user ID." } satisfies ErrorResponse;
+
+    response.status(400).json(body);
+    return;
+  }
+
+  const user = await database.findUserById(id);
+
+  if (!user) {
+    const body = { error: "User not found." } satisfies ErrorResponse;
+
+    response.status(404).json(body);
+    return;
+  }
+
+  const body = { user: serializeUser(user) } satisfies UserResponse;
+
+  response.json(body);
+});
+
 app.post("/api/users", async (request, response) => {
   const input = parseCreateUserRequest(request.body);
 
