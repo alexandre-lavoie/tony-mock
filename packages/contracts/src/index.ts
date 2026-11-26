@@ -22,6 +22,10 @@ export type Follow = {
   createdAt: string;
 };
 
+export type FollowResponse = {
+  follow: Follow;
+};
+
 export type HealthResponse = {
   status: "ok";
   database: DatabaseDialect;

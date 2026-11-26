@@ -1,6 +1,8 @@
 import type {
   CreateUserRequest,
   ErrorResponse,
+  Follow,
+  FollowResponse,
   HealthResponse,
   MessageResponse,
   User,
@@ -22,6 +24,21 @@ function serializeUser(
     ...user,
     createdAt: user.createdAt.toISOString(),
   };
+}
+
+function serializeFollow(
+  follow: Omit<Follow, "createdAt"> & { createdAt: Date },
+): Follow {
+  return {
+    ...follow,
+    createdAt: follow.createdAt.toISOString(),
+  };
+}
+
+function parseId(value: string): number | undefined {
+  const id = Number(value);
+
+  return Number.isSafeInteger(id) && id > 0 ? id : undefined;
 }
 
 function parseCreateUserRequest(value: unknown): CreateUserRequest | undefined {
@@ -114,9 +131,9 @@ app.post("/api/users", async (request, response) => {
 });
 
 app.delete("/api/users/:id", async (request, response) => {
-  const id = Number(request.params.id);
+  const id = parseId(request.params.id);
 
-  if (!Number.isSafeInteger(id) || id <= 0) {
+  if (!id) {
     const body = { error: "Invalid user ID." } satisfies ErrorResponse;
 
     response.status(400).json(body);
@@ -132,6 +149,81 @@ app.delete("/api/users/:id", async (request, response) => {
 
   response.status(204).send();
 });
+
+app.post(
+  "/users/:followerId/follow/:followingId",
+  async (request, response) => {
+    const followerId = parseId(request.params.followerId);
+    const followingId = parseId(request.params.followingId);
+
+    if (!followerId || !followingId) {
+      const body = { error: "Invalid user ID." } satisfies ErrorResponse;
+
+      response.status(400).json(body);
+      return;
+    }
+
+    if (followerId === followingId) {
+      const body = {
+        error: "A user cannot follow itself.",
+      } satisfies ErrorResponse;
+
+      response.status(400).json(body);
+      return;
+    }
+
+    const [follower, following] = await Promise.all([
+      database.findUserById(followerId),
+      database.findUserById(followingId),
+    ]);
+
+    if (!follower || !following) {
+      const body = { error: "User not found." } satisfies ErrorResponse;
+
+      response.status(404).json(body);
+      return;
+    }
+
+    const follow = await database.createFollow(followerId, followingId);
+
+    if (!follow) {
+      const body = {
+        error: "The user is already following that user.",
+      } satisfies ErrorResponse;
+
+      response.status(409).json(body);
+      return;
+    }
+
+    const body = { follow: serializeFollow(follow) } satisfies FollowResponse;
+
+    response.status(201).json(body);
+  },
+);
+
+app.delete(
+  "/users/:followerId/follow/:followingId",
+  async (request, response) => {
+    const followerId = parseId(request.params.followerId);
+    const followingId = parseId(request.params.followingId);
+
+    if (!followerId || !followingId) {
+      const body = { error: "Invalid user ID." } satisfies ErrorResponse;
+
+      response.status(400).json(body);
+      return;
+    }
+
+    if (!(await database.deleteFollow(followerId, followingId))) {
+      const body = { error: "Follow not found." } satisfies ErrorResponse;
+
+      response.status(404).json(body);
+      return;
+    }
+
+    response.status(204).send();
+  },
+);
 
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
