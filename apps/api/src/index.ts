@@ -259,6 +259,15 @@ app.post(
       return;
     }
 
+    if (await database.hasFollow(followingId, followerId)) {
+      const body = {
+        error: "That user already follows you, so you cannot follow them back.",
+      } satisfies ErrorResponse;
+
+      response.status(409).json(body);
+      return;
+    }
+
     const follow = await database.createFollow(followerId, followingId);
 
     if (!follow) {
@@ -293,9 +302,11 @@ app.get("/users/:followerId/following", async (request, response) => {
     return;
   }
 
-  const body = {
-    followingIds: await database.listFollowingIds(followerId),
-  } satisfies FollowingResponse;
+  const [followerIds, followingIds] = await Promise.all([
+    database.listFollowerIds(followerId),
+    database.listFollowingIds(followerId),
+  ]);
+  const body = { followerIds, followingIds } satisfies FollowingResponse;
 
   response.json(body);
 });

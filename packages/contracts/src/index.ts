@@ -36,6 +36,7 @@ export type FollowResponse = {
 };
 
 export type FollowingResponse = {
+  followerIds: number[];
   followingIds: number[];
 };
 

@@ -18,6 +18,7 @@ import {
 
 export function UsersGrid({ users }: { users: User[] }) {
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const [followerIds, setFollowerIds] = useState<Set<number>>(new Set());
   const [followingIds, setFollowingIds] = useState<Set<number>>(new Set());
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set());
   const [errors, setErrors] = useState<Record<number, string>>({});
@@ -26,6 +27,7 @@ export function UsersGrid({ users }: { users: User[] }) {
     async function updateSession() {
       const user = getStoredUser();
       setSessionUser(user);
+      setFollowerIds(new Set());
       setFollowingIds(new Set());
 
       if (!user) {
@@ -36,6 +38,7 @@ export function UsersGrid({ users }: { users: User[] }) {
 
       if (response.ok) {
         const body = (await response.json()) as FollowingResponse;
+        setFollowerIds(new Set(body.followerIds));
         setFollowingIds(new Set(body.followingIds));
       }
     }
@@ -83,6 +86,7 @@ export function UsersGrid({ users }: { users: User[] }) {
     <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="4">
       {users.map((user) => {
         const isFollowing = followingIds.has(user.id);
+        const followsYou = followerIds.has(user.id);
         const isPending = pendingIds.has(user.id);
 
         return (
@@ -112,14 +116,16 @@ export function UsersGrid({ users }: { users: User[] }) {
                 <Flex direction="column" gap="1">
                   <Button
                     variant={isFollowing ? "soft" : "solid"}
-                    disabled={isFollowing || isPending}
+                    disabled={isFollowing || followsYou || isPending}
                     onClick={() => void follow(user.id)}
                   >
                     {isPending
                       ? "Following…"
                       : isFollowing
                         ? "Following"
-                        : "Follow"}
+                        : followsYou
+                          ? "Follows you"
+                          : "Follow"}
                   </Button>
                   {errors[user.id] ? (
                     <Text size="1" color="red">

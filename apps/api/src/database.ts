@@ -22,6 +22,8 @@ export type DatabaseAdapter = {
   deleteUser: (id: number) => Promise<boolean>;
   findUserById: (id: number) => Promise<DatabaseUser | undefined>;
   findUserByUsername: (username: string) => Promise<DatabaseUser | undefined>;
+  hasFollow: (followerId: number, followingId: number) => Promise<boolean>;
+  listFollowerIds: (followingId: number) => Promise<number[]>;
   listFollowingIds: (followerId: number) => Promise<number[]>;
   listUsers: () => Promise<DatabaseUser[]>;
 };
@@ -103,6 +105,28 @@ async function createDatabaseAdapter(): Promise<DatabaseAdapter> {
 
         return user;
       },
+      hasFollow: async (followerId, followingId) => {
+        const [follow] = await db
+          .select({ followerId: follows.followerId })
+          .from(follows)
+          .where(
+            and(
+              eq(follows.followerId, followerId),
+              eq(follows.followingId, followingId),
+            ),
+          )
+          .limit(1);
+
+        return Boolean(follow);
+      },
+      listFollowerIds: async (followingId) => {
+        const rows = await db
+          .select({ followerId: follows.followerId })
+          .from(follows)
+          .where(eq(follows.followingId, followingId));
+
+        return rows.map(({ followerId }) => followerId);
+      },
       listFollowingIds: async (followerId) => {
         const rows = await db
           .select({ followingId: follows.followingId })
@@ -177,6 +201,28 @@ async function createDatabaseAdapter(): Promise<DatabaseAdapter> {
         .limit(1);
 
       return user;
+    },
+    hasFollow: async (followerId, followingId) => {
+      const [follow] = await db
+        .select({ followerId: follows.followerId })
+        .from(follows)
+        .where(
+          and(
+            eq(follows.followerId, followerId),
+            eq(follows.followingId, followingId),
+          ),
+        )
+        .limit(1);
+
+      return Boolean(follow);
+    },
+    listFollowerIds: async (followingId) => {
+      const rows = await db
+        .select({ followerId: follows.followerId })
+        .from(follows)
+        .where(eq(follows.followingId, followingId));
+
+      return rows.map(({ followerId }) => followerId);
     },
     listFollowingIds: async (followerId) => {
       const rows = await db
