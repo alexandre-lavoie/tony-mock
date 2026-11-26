@@ -21,7 +21,7 @@ import {
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
-import { apiUrl } from "../lib/api";
+import { browserApiUrl } from "../lib/api";
 import { storeUser } from "../lib/auth";
 
 type AuthMode = "login" | "signup";
@@ -49,7 +49,7 @@ export function AuthPage({ defaultMode }: { defaultMode: AuthMode }) {
     } satisfies LoginRequest;
 
     try {
-      const response = await fetch(`${apiUrl}/login`, {
+      const response = await fetch(`${browserApiUrl}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
@@ -83,7 +83,7 @@ export function AuthPage({ defaultMode }: { defaultMode: AuthMode }) {
     } satisfies CreateUserRequest;
 
     try {
-      const response = await fetch(`${apiUrl}/api/users`, {
+      const response = await fetch(`${browserApiUrl}/api/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),

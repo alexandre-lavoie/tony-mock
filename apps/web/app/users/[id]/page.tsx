@@ -16,10 +16,10 @@ import {
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { apiUrl } from "../../../lib/api";
+import { getServerApiUrl } from "../../../lib/api";
 
 async function getUser(id: string) {
-  const response = await fetch(`${apiUrl}/api/users/${id}`, {
+  const response = await fetch(`${getServerApiUrl()}/api/users/${id}`, {
     cache: "no-store",
   });
 
@@ -35,7 +35,7 @@ async function getUser(id: string) {
 }
 
 async function getInfluenceScore(id: string) {
-  const response = await fetch(`${apiUrl}/users/${id}/influence`, {
+  const response = await fetch(`${getServerApiUrl()}/users/${id}/influence`, {
     cache: "no-store",
   });
 
@@ -47,9 +47,12 @@ async function getInfluenceScore(id: string) {
 }
 
 async function getRecursiveFollowers(id: string) {
-  const response = await fetch(`${apiUrl}/users/${id}/influence/followers`, {
-    cache: "no-store",
-  });
+  const response = await fetch(
+    `${getServerApiUrl()}/users/${id}/influence/followers`,
+    {
+      cache: "no-store",
+    },
+  );
 
   if (!response.ok) {
     throw new Error("Unable to load this user's followers.");

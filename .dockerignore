@@ -1,0 +1,14 @@
+.git
+.next
+.turbo
+**/.env
+**/.env.local
+**/.next
+**/dist
+**/node_modules
+*.db
+*.db-shm
+*.db-wal
+node_modules
+npm-debug.log*
+pnpm-debug.log*

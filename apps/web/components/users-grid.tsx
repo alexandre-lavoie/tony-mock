@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { apiUrl } from "../lib/api";
+import { browserApiUrl } from "../lib/api";
 import {
   getStoredUser,
   type SessionUser,
@@ -36,7 +36,9 @@ export function UsersGrid({ users }: { users: UserListItem[] }) {
         return;
       }
 
-      const response = await fetch(`${apiUrl}/users/${user.id}/following`);
+      const response = await fetch(
+        `${browserApiUrl}/users/${user.id}/following`,
+      );
 
       if (response.ok) {
         const body = (await response.json()) as FollowingResponse;
@@ -60,7 +62,7 @@ export function UsersGrid({ users }: { users: UserListItem[] }) {
 
     try {
       const response = await fetch(
-        `${apiUrl}/users/${sessionUser.id}/follow/${followingId}`,
+        `${browserApiUrl}/users/${sessionUser.id}/follow/${followingId}`,
         { method: isFollowing ? "DELETE" : "POST" },
       );
 

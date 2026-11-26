@@ -2,10 +2,12 @@ import type { UsersResponse } from "@influencial/contracts";
 import { Card, Container, Flex, Heading, Text } from "@radix-ui/themes";
 
 import { UsersGrid } from "../../components/users-grid";
-import { apiUrl } from "../../lib/api";
+import { getServerApiUrl } from "../../lib/api";
 
 async function getUsers() {
-  const response = await fetch(`${apiUrl}/api/users`, { cache: "no-store" });
+  const response = await fetch(`${getServerApiUrl()}/api/users`, {
+    cache: "no-store",
+  });
 
   if (!response.ok) {
     throw new Error("Unable to load users.");
