@@ -1,10 +1,15 @@
-import type { InfluenceResponse, UserResponse } from "@influencial/contracts";
+import type {
+  InfluenceResponse,
+  RecursiveFollowersResponse,
+  UserResponse,
+} from "@influencial/contracts";
 import {
   Avatar,
   Badge,
   Card,
   Container,
   Flex,
+  Grid,
   Heading,
   Text,
 } from "@radix-ui/themes";
@@ -41,15 +46,28 @@ async function getInfluenceScore(id: string) {
   return ((await response.json()) as InfluenceResponse).score;
 }
 
+async function getRecursiveFollowers(id: string) {
+  const response = await fetch(`${apiUrl}/users/${id}/influence/followers`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to load this user's followers.");
+  }
+
+  return ((await response.json()) as RecursiveFollowersResponse).followers;
+}
+
 export default async function UserProfilePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [user, influenceScore] = await Promise.all([
+  const [user, influenceScore, followers] = await Promise.all([
     getUser(id),
     getInfluenceScore(id),
+    getRecursiveFollowers(id),
   ]);
 
   return (
@@ -83,6 +101,57 @@ export default async function UserProfilePage({
               <Text size="2" color="gray">
                 Joined {new Date(user.createdAt).toLocaleDateString()}
               </Text>
+            </Flex>
+          </Card>
+
+          <Card size="4">
+            <Flex direction="column" gap="4">
+              <Flex align="baseline" justify="between" gap="3">
+                <Heading size="5">Followers</Heading>
+                <Text size="2" color="gray">
+                  {followers.length} total
+                </Text>
+              </Flex>
+
+              {followers.length ? (
+                <Grid columns={{ initial: "1", sm: "2" }} gap="3">
+                  {followers.map((follower) => (
+                    <Card asChild size="2" key={follower.id}>
+                      <Link
+                        className="user-link"
+                        href={`/users/${follower.id}`}
+                      >
+                        <Flex align="center" gap="3">
+                          <Avatar
+                            size="3"
+                            radius="full"
+                            fallback={(
+                              follower.displayName ?? follower.username
+                            )
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          />
+                          <Flex direction="column" gap="1">
+                            <Text size="2" weight="bold">
+                              {follower.displayName ?? follower.username}
+                            </Text>
+                            <Text size="1" color="gray">
+                              @{follower.username}
+                            </Text>
+                            <Text size="1" color="blue">
+                              {follower.depth === 1
+                                ? "Direct follower"
+                                : `${follower.depth} levels away`}
+                            </Text>
+                          </Flex>
+                        </Flex>
+                      </Link>
+                    </Card>
+                  ))}
+                </Grid>
+              ) : (
+                <Text color="gray">This user has no followers yet.</Text>
+              )}
             </Flex>
           </Card>
         </Flex>

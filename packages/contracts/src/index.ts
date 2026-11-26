@@ -44,6 +44,14 @@ export type InfluenceResponse = {
   score: number;
 };
 
+export type RecursiveFollower = User & {
+  depth: number;
+};
+
+export type RecursiveFollowersResponse = {
+  followers: RecursiveFollower[];
+};
+
 export type HealthResponse = {
   status: "ok";
   database: DatabaseDialect;

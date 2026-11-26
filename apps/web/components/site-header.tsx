@@ -44,9 +44,11 @@ export function SiteHeader() {
             </Button>
             {user ? (
               <>
-                <Text size="2" color="gray">
-                  {user.displayName ?? `@${user.username}`}
-                </Text>
+                <Button asChild variant="ghost">
+                  <Link href={`/users/${user.id}`}>
+                    {user.displayName ?? `@${user.username}`}
+                  </Link>
+                </Button>
                 <Button variant="soft" onClick={logout}>
                   Log out
                 </Button>

@@ -9,6 +9,7 @@ import type {
   LoginRequest,
   LoginResponse,
   MessageResponse,
+  RecursiveFollowersResponse,
   User,
   UserResponse,
   UsersResponse,
@@ -17,7 +18,11 @@ import cors from "cors";
 import express from "express";
 
 import { database } from "./database";
-import { calculateInfluenceScore, calculateInfluenceScores } from "./influence";
+import {
+  calculateInfluenceScore,
+  calculateInfluenceScores,
+  calculateRecursiveFollowerDepths,
+} from "./influence";
 import { seedDatabaseIfEmpty } from "./seed";
 
 const app = express();
@@ -366,6 +371,43 @@ app.get("/users/:id/influence", async (request, response) => {
   const body = {
     score: await calculateInfluenceScore(id, database.listFollowerIds),
   } satisfies InfluenceResponse;
+
+  response.json(body);
+});
+
+app.get("/users/:id/influence/followers", async (request, response) => {
+  const id = parseId(request.params.id);
+
+  if (!id) {
+    const body = { error: "Invalid user ID." } satisfies ErrorResponse;
+
+    response.status(400).json(body);
+    return;
+  }
+
+  if (!(await database.findUserById(id))) {
+    const body = { error: "User not found." } satisfies ErrorResponse;
+
+    response.status(404).json(body);
+    return;
+  }
+
+  const [users, followEdges] = await Promise.all([
+    database.listUsers(),
+    database.listFollowEdges(),
+  ]);
+  const followerDepths = calculateRecursiveFollowerDepths(id, followEdges);
+  const followers = users
+    .filter((user) => followerDepths.has(user.id))
+    .map((user) => ({
+      ...serializeUser(user),
+      depth: followerDepths.get(user.id) as number,
+    }))
+    .sort(
+      (left, right) =>
+        left.depth - right.depth || left.username.localeCompare(right.username),
+    );
+  const body = { followers } satisfies RecursiveFollowersResponse;
 
   response.json(body);
 });
