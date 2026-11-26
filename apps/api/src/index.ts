@@ -5,6 +5,7 @@ import type {
   FollowingResponse,
   FollowResponse,
   HealthResponse,
+  InfluenceResponse,
   LoginRequest,
   LoginResponse,
   MessageResponse,
@@ -16,6 +17,7 @@ import cors from "cors";
 import express from "express";
 
 import { database } from "./database";
+import { calculateInfluenceScore } from "./influence";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3001);
@@ -42,6 +44,31 @@ function parseId(value: string): number | undefined {
   const id = Number(value);
 
   return Number.isSafeInteger(id) && id > 0 ? id : undefined;
+}
+
+async function wouldCreateFollowCycle(
+  followerId: number,
+  followingId: number,
+): Promise<boolean> {
+  const pending = [followingId];
+  const visited = new Set<number>();
+
+  while (pending.length > 0) {
+    const userId = pending.shift();
+
+    if (userId === undefined || visited.has(userId)) {
+      continue;
+    }
+
+    if (userId === followerId) {
+      return true;
+    }
+
+    visited.add(userId);
+    pending.push(...(await database.listFollowingIds(userId)));
+  }
+
+  return false;
 }
 
 function parseCreateUserRequest(value: unknown): CreateUserRequest | undefined {
@@ -259,9 +286,9 @@ app.post(
       return;
     }
 
-    if (await database.hasFollow(followingId, followerId)) {
+    if (await wouldCreateFollowCycle(followerId, followingId)) {
       const body = {
-        error: "That user already follows you, so you cannot follow them back.",
+        error: "This follow would create a cycle.",
       } satisfies ErrorResponse;
 
       response.status(409).json(body);
@@ -307,6 +334,30 @@ app.get("/users/:followerId/following", async (request, response) => {
     database.listFollowingIds(followerId),
   ]);
   const body = { followerIds, followingIds } satisfies FollowingResponse;
+
+  response.json(body);
+});
+
+app.get("/users/:id/influence", async (request, response) => {
+  const id = parseId(request.params.id);
+
+  if (!id) {
+    const body = { error: "Invalid user ID." } satisfies ErrorResponse;
+
+    response.status(400).json(body);
+    return;
+  }
+
+  if (!(await database.findUserById(id))) {
+    const body = { error: "User not found." } satisfies ErrorResponse;
+
+    response.status(404).json(body);
+    return;
+  }
+
+  const body = {
+    score: await calculateInfluenceScore(id, database.listFollowerIds),
+  } satisfies InfluenceResponse;
 
   response.json(body);
 });

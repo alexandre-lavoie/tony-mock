@@ -40,6 +40,10 @@ export type FollowingResponse = {
   followingIds: number[];
 };
 
+export type InfluenceResponse = {
+  score: number;
+};
+
 export type HealthResponse = {
   status: "ok";
   database: DatabaseDialect;

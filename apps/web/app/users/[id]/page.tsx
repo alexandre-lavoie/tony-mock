@@ -1,4 +1,4 @@
-import type { UserResponse } from "@influencial/contracts";
+import type { InfluenceResponse, UserResponse } from "@influencial/contracts";
 import {
   Avatar,
   Badge,
@@ -29,13 +29,28 @@ async function getUser(id: string) {
   return ((await response.json()) as UserResponse).user;
 }
 
+async function getInfluenceScore(id: string) {
+  const response = await fetch(`${apiUrl}/users/${id}/influence`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to calculate this user's influence score.");
+  }
+
+  return ((await response.json()) as InfluenceResponse).score;
+}
+
 export default async function UserProfilePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const user = await getUser(id);
+  const [user, influenceScore] = await Promise.all([
+    getUser(id),
+    getInfluenceScore(id),
+  ]);
 
   return (
     <main className="page-shell">
@@ -60,7 +75,11 @@ export default async function UserProfilePage({
                   @{user.username}
                 </Text>
               </Flex>
-              <Badge variant="soft">Member #{user.id}</Badge>
+              <Flex gap="2" wrap="wrap" justify="center">
+                <Badge color="blue" variant="solid">
+                  Influence: {influenceScore}
+                </Badge>
+              </Flex>
               <Text size="2" color="gray">
                 Joined {new Date(user.createdAt).toLocaleDateString()}
               </Text>
