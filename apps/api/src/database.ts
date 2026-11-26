@@ -1,32 +1,31 @@
 import "dotenv/config";
 
-import type { DatabaseDialect, User } from "@influencial/contracts";
+import type {
+  CreateUserRequest,
+  DatabaseDialect,
+  User,
+} from "@influencial/contracts";
+import { eq } from "drizzle-orm";
 
 type DatabaseUser = Omit<User, "createdAt"> & { createdAt: Date };
 
 export type DatabaseAdapter = {
   dialect: DatabaseDialect;
+  createUser: (input: CreateUserRequest) => Promise<DatabaseUser>;
+  deleteUser: (id: number) => Promise<boolean>;
+  findUserByUsername: (username: string) => Promise<DatabaseUser | undefined>;
   listUsers: () => Promise<DatabaseUser[]>;
 };
 
 function getDatabaseDialect(): DatabaseDialect {
-  const configuredDialect = process.env.DATABASE_DIALECT?.toLowerCase();
+  const databaseUrl = (
+    process.env.DATABASE_URL ?? "file:local.db"
+  ).toLowerCase();
 
-  if (!configuredDialect) {
-    return process.env.POSTGRES_DATABASE_URL ? "postgresql" : "sqlite";
-  }
-
-  if (configuredDialect === "sqlite") {
-    return "sqlite";
-  }
-
-  if (configuredDialect === "postgres" || configuredDialect === "postgresql") {
-    return "postgresql";
-  }
-
-  throw new Error(
-    `Unsupported DATABASE_DIALECT "${configuredDialect}". Use sqlite or postgresql.`,
-  );
+  return databaseUrl.startsWith("postgres://") ||
+    databaseUrl.startsWith("postgresql://")
+    ? "postgresql"
+    : "sqlite";
 }
 
 async function createDatabaseAdapter(): Promise<DatabaseAdapter> {
@@ -38,6 +37,32 @@ async function createDatabaseAdapter(): Promise<DatabaseAdapter> {
 
     return {
       dialect,
+      createUser: async (input) => {
+        const [user] = await db.insert(users).values(input).returning();
+
+        if (!user) {
+          throw new Error("Failed to create user.");
+        }
+
+        return user;
+      },
+      deleteUser: async (id) => {
+        const deleted = await db
+          .delete(users)
+          .where(eq(users.id, id))
+          .returning({ id: users.id });
+
+        return deleted.length > 0;
+      },
+      findUserByUsername: async (username) => {
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.username, username))
+          .limit(1);
+
+        return user;
+      },
       listUsers: async () => db.select().from(users),
     };
   }
@@ -47,6 +72,32 @@ async function createDatabaseAdapter(): Promise<DatabaseAdapter> {
 
   return {
     dialect,
+    createUser: async (input) => {
+      const [user] = await db.insert(users).values(input).returning();
+
+      if (!user) {
+        throw new Error("Failed to create user.");
+      }
+
+      return user;
+    },
+    deleteUser: async (id) => {
+      const deleted = await db
+        .delete(users)
+        .where(eq(users.id, id))
+        .returning({ id: users.id });
+
+      return deleted.length > 0;
+    },
+    findUserByUsername: async (username) => {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.username, username))
+        .limit(1);
+
+      return user;
+    },
     listUsers: async () => db.select().from(users),
   };
 }

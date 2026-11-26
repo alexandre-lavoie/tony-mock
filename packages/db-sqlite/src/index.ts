@@ -6,7 +6,7 @@ import * as schema from "./schema";
 export * from "./schema";
 
 export function createDatabase(
-  url = process.env.SQLITE_DATABASE_URL ?? "file:local.db",
+  url = process.env.DATABASE_URL ?? "file:local.db",
 ) {
   const client = createClient({ url });
 

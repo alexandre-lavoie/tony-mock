@@ -7,6 +7,15 @@ export type User = {
   createdAt: string;
 };
 
+export type CreateUserRequest = {
+  username: string;
+  displayName?: string | null;
+};
+
+export type UserResponse = {
+  user: User;
+};
+
 export type Follow = {
   followerId: number;
   followingId: number;
@@ -24,4 +33,8 @@ export type MessageResponse = {
 
 export type UsersResponse = {
   users: User[];
+};
+
+export type ErrorResponse = {
+  error: string;
 };

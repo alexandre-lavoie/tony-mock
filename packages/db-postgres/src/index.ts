@@ -6,7 +6,7 @@ import * as schema from "./schema";
 export * from "./schema";
 
 export function createDatabase(
-  url = process.env.POSTGRES_DATABASE_URL ??
+  url = process.env.DATABASE_URL ??
     "postgresql://postgres:postgres@localhost:5432/influencial",
 ) {
   const client = postgres(url);
