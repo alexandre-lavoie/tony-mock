@@ -4,6 +4,8 @@
   "packageManager": "pnpm@12.19.0",
   "scripts": {
     "build": "turbo build",
+    "db:generate": "pnpm --filter './packages/db-*' generate",
+    "db:migrate": "pnpm --filter './packages/db-*' migrate",
     "dev": "turbo dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

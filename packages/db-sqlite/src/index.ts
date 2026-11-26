@@ -1,0 +1,16 @@
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
+
+import * as schema from "./schema.js";
+
+export * from "./schema.js";
+
+export function createDatabase(
+  url = process.env.SQLITE_DATABASE_URL ?? "file:local.db",
+) {
+  const client = createClient({ url });
+
+  return drizzle(client, { schema });
+}
+
+export const db = createDatabase();
