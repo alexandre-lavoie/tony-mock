@@ -16,6 +16,15 @@ export type UserResponse = {
   user: User;
 };
 
+export type LoginRequest = {
+  username: string;
+  password?: string;
+};
+
+export type LoginResponse = {
+  user: Pick<User, "id" | "username" | "displayName">;
+};
+
 export type Follow = {
   followerId: number;
   followingId: number;

@@ -4,6 +4,8 @@ import type {
   Follow,
   FollowResponse,
   HealthResponse,
+  LoginRequest,
+  LoginResponse,
   MessageResponse,
   User,
   UserResponse,
@@ -76,6 +78,24 @@ function parseCreateUserRequest(value: unknown): CreateUserRequest | undefined {
   };
 }
 
+function parseLoginRequest(value: unknown): LoginRequest | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const { username, password } = value as Record<string, unknown>;
+
+  if (typeof username !== "string" || username.trim().length === 0) {
+    return undefined;
+  }
+
+  if (password !== undefined && typeof password !== "string") {
+    return undefined;
+  }
+
+  return { username: username.trim(), password };
+}
+
 app.use(cors());
 app.use(express.json());
 
@@ -90,6 +110,36 @@ app.get("/health", (_request, response) => {
 
 app.get("/api/message", (_request, response) => {
   const body = { message: "Hello from the API!" } satisfies MessageResponse;
+
+  response.json(body);
+});
+
+app.post("/login", async (request, response) => {
+  const input = parseLoginRequest(request.body);
+
+  if (!input) {
+    const body = { error: "A username is required." } satisfies ErrorResponse;
+
+    response.status(400).json(body);
+    return;
+  }
+
+  const user = await database.findUserByUsername(input.username);
+
+  if (!user) {
+    const body = { error: "User not found." } satisfies ErrorResponse;
+
+    response.status(404).json(body);
+    return;
+  }
+
+  const body = {
+    user: {
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+    },
+  } satisfies LoginResponse;
 
   response.json(body);
 });
